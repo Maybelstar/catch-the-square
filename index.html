@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Tells the browser which characters this page uses -->
+    <meta charset="UTF-8" />
+
+    <!-- Makes the page scale nicely on phones and tablets -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- The text shown in the browser tab -->
+    <title>Catch the Square</title>
+
+    <!-- Connect this HTML file to the CSS file -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Main game content -->
+    <main class="container">
+      <!-- Game title -->
+      <h1>Catch the Square</h1>
+
+      <!-- Score and timer area -->
+      <div class="info">
+        <p>Score: <span id="score">0</span></p>
+        <p>Time: <span id="timer">20</span></p>
+      </div>
+
+      <!-- This is the box where the square can move around -->
+      <div id="game-area">
+        <!-- This is the square the player clicks -->
+        <div id="square"></div>
+      </div>
+
+      <!-- Message shown before and after the game -->
+      <p id="message">Click Start to play!</p>
+
+      <!-- Button to begin the game -->
+      <button id="start-button">Start Game</button>
+    </main>
+
+    <!-- Connect this HTML file to the JavaScript file -->
+    <script src="script.js"></script>
+  </body>
+</html>
