@@ -225,6 +225,18 @@ h1 {
   width: 74px;
 }
 
+.cloud-four {
+  top: 42px;
+  left: 690px;
+  width: 88px;
+}
+
+.cloud-five {
+  top: 128px;
+  left: 860px;
+  width: 68px;
+}
+
 .hill {
   position: absolute;
   bottom: 82px;
@@ -388,12 +400,13 @@ h1 {
 
 .rabbit-ear {
   position: absolute;
-  top: -6px;
+  top: -10px;
   width: 12px;
-  height: 34px;
+  height: 38px;
   border-radius: 12px 12px 6px 6px;
   background: #fff6ef;
   border: 3px solid var(--ink);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.55);
 }
 
 .rabbit-ear::before {
@@ -408,31 +421,32 @@ h1 {
 }
 
 .ear-left {
-  left: 10px;
-  transform: rotate(-8deg);
+  left: 9px;
+  transform: rotate(-12deg);
 }
 
 .ear-right {
-  left: 26px;
-  transform: rotate(8deg);
+  left: 27px;
+  transform: rotate(12deg);
 }
 
 .rabbit-head {
   position: absolute;
-  top: 16px;
-  left: 10px;
-  width: 30px;
-  height: 24px;
-  border-radius: 14px;
-  background: #fff6ef;
+  top: 14px;
+  left: 8px;
+  width: 34px;
+  height: 27px;
+  border-radius: 16px 16px 15px 15px;
+  background: linear-gradient(180deg, #fffaf6 0%, #f7e9df 100%);
   border: 3px solid var(--ink);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.6);
 }
 
 .rabbit-head::before,
 .rabbit-head::after {
   content: "";
   position: absolute;
-  top: 9px;
+  top: 10px;
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -440,33 +454,59 @@ h1 {
 }
 
 .rabbit-head::before {
-  left: 7px;
+  left: 8px;
 }
 
 .rabbit-head::after {
-  right: 7px;
+  right: 8px;
+}
+
+.rabbit-head::before,
+.rabbit-head::after {
+  box-shadow: 0 0 0 1px rgba(27, 53, 85, 0.05);
+}
+
+.rabbit-head + .rabbit-body::before,
+.rabbit-head + .rabbit-body::after {
+  content: "";
+  position: absolute;
+  top: -19px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffb7c7;
+}
+
+.rabbit-head + .rabbit-body::before {
+  left: 0;
+}
+
+.rabbit-head + .rabbit-body::after {
+  right: 0;
 }
 
 .rabbit-body {
   position: absolute;
-  top: 34px;
-  left: 6px;
-  width: 38px;
-  height: 34px;
-  border-radius: 18px 18px 14px 14px;
-  background: linear-gradient(180deg, #fff8f3 0%, #f4e6dc 100%);
+  top: 37px;
+  left: 5px;
+  width: 40px;
+  height: 32px;
+  border-radius: 20px 20px 16px 16px;
+  background: linear-gradient(180deg, #fffaf6 0%, #efe2d6 100%);
   border: 3px solid var(--ink);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.55);
 }
 
 .rabbit-tail {
   position: absolute;
-  right: -2px;
-  top: 42px;
-  width: 14px;
-  height: 14px;
+  right: -4px;
+  top: 40px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff6ef;
   border: 3px solid var(--ink);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.6);
 }
 
 #runner::before,
@@ -712,6 +752,7 @@ button:active {
   }
 
   .cloud-three,
+  .cloud-five,
   #parallax-strip::after {
     display: none;
   }

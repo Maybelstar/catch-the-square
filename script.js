@@ -14,7 +14,6 @@ const controlButtonMap = controlButtons.reduce(function (map, button) {
   map[button.dataset.control] = button;
   return map;
 }, {});
-const sun = document.querySelector(".decor-sun");
 const clouds = Array.from(document.querySelectorAll(".decor-cloud"));
 const hillBack = document.querySelector(".hill-back");
 const hillFront = document.querySelector(".hill-front");
@@ -210,7 +209,7 @@ function generateCoinPositions(obstacleLayout) {
 
 function loadBestScore() {
   try {
-    return Number(window.localStorage.getItem("rabbit-run-best-score-v2")) || 0;
+    return Number(window.localStorage.getItem("rabbit-run-best-score-v3")) || 0;
   } catch (error) {
     return 0;
   }
@@ -218,7 +217,7 @@ function loadBestScore() {
 
 function loadBestPlayerName() {
   try {
-    return window.localStorage.getItem("rabbit-run-best-player-v2") || "Nobody yet";
+    return window.localStorage.getItem("rabbit-run-best-player-v3") || "Nobody yet";
   } catch (error) {
     return "Nobody yet";
   }
@@ -226,8 +225,8 @@ function loadBestPlayerName() {
 
 function saveBestScore() {
   try {
-    window.localStorage.setItem("rabbit-run-best-score-v2", String(bestScore));
-    window.localStorage.setItem("rabbit-run-best-player-v2", bestPlayerName);
+    window.localStorage.setItem("rabbit-run-best-score-v3", String(bestScore));
+    window.localStorage.setItem("rabbit-run-best-player-v3", bestPlayerName);
   } catch (error) {
     return;
   }
@@ -401,10 +400,6 @@ function renderScene() {
 }
 
 function updateParallax() {
-  if (sun) {
-    sun.style.transform = "translateX(" + -cameraX * 0.06 + "px)";
-  }
-
   clouds.forEach(function (cloud, index) {
     const factor = 0.1 + index * 0.04;
     cloud.style.transform = "translateX(" + -cameraX * factor + "px)";
@@ -712,7 +707,8 @@ function updateCritterCollisions() {
         runnerState.velocityY = jumpPower * 0.55;
         runnerState.onGround = false;
         runner.classList.add("jumping");
-        setMessage("Nice stomp!", 2000);
+        adjustScore(3);
+        setMessage("Nice stomp! +3", 2000);
         continue;
       }
 
