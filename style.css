@@ -88,7 +88,7 @@ h1 {
 #game-area {
   position: relative;
   width: 100%;
-  height: 420px;
+  height: 408px;
   border: 5px solid var(--ink);
   border-radius: 24px;
   overflow: hidden;
@@ -629,8 +629,8 @@ button:active {
 
   #game-area {
     height: auto;
-    min-height: 380px;
-    aspect-ratio: 5 / 6;
+    min-height: 360px;
+    aspect-ratio: 100 / 107;
   }
 
   .cloud-three,
@@ -677,6 +677,6 @@ button:active {
   }
 
   #game-area {
-    min-height: 400px;
+    min-height: 372px;
   }
 }

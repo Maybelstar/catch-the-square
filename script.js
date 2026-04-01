@@ -26,7 +26,11 @@ const runnerHeight = 76;
 const gravity = 0.82;
 const jumpPower = 15.8;
 const moveSpeed = 5.2;
-const levelLength = 3200;
+const levelLength = 6400;
+const totalCoins = 18;
+const totalPipes = 5;
+const totalCritters = 4;
+const coinHeights = [60, 74, 88, 102, 118, 134, 150];
 
 let score = 0;
 let bestScore = loadBestScore();
@@ -71,6 +75,80 @@ function getViewportScale() {
 
 function getVisibleWorldWidth() {
   return gameArea.clientWidth / getViewportScale();
+}
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function isCoinNearObstacle(coinX, obstacleLayout) {
+  return obstacleLayout.some(function (obstacle) {
+    const safeDistance = obstacle.type === "pipe" ? 120 : 92;
+    return Math.abs(coinX - obstacle.x) < safeDistance;
+  });
+}
+
+function generatePipePositions() {
+  const firstPipeStart = 760;
+  const lastPipeEnd = levelLength - 980;
+  const slotWidth = (lastPipeEnd - firstPipeStart) / totalPipes;
+
+  return Array.from({ length: totalPipes }, function (_, index) {
+    const slotStart = firstPipeStart + index * slotWidth;
+    const margin = Math.min(190, slotWidth * 0.22);
+    return Math.round(randomBetween(slotStart + margin, slotStart + slotWidth - margin));
+  });
+}
+
+function generateObstacleLayout() {
+  const pipePositions = generatePipePositions();
+  const obstacleLayout = pipePositions.map(function (position) {
+    return { type: "pipe", x: position };
+  });
+
+  for (let index = 0; index < totalCritters; index += 1) {
+    const leftPipe = pipePositions[index];
+    const rightPipe = pipePositions[index + 1];
+    const critterMinX = leftPipe + 180;
+    const critterMaxX = rightPipe - 160;
+    const critterX = Math.round(randomBetween(critterMinX, critterMaxX));
+    obstacleLayout.push({ type: "critter", x: critterX });
+  }
+
+  return obstacleLayout.sort(function (obstacleA, obstacleB) {
+    return obstacleA.x - obstacleB.x;
+  });
+}
+
+function generateCoinPositions(obstacleLayout) {
+  const positions = [];
+  const firstCoinStart = 340;
+  const lastCoinEnd = levelLength - 280;
+  const slotWidth = (lastCoinEnd - firstCoinStart) / totalCoins;
+
+  for (let index = 0; index < totalCoins; index += 1) {
+    const slotStart = firstCoinStart + index * slotWidth;
+    const margin = Math.min(110, slotWidth * 0.18);
+    let coinX = Math.round(randomBetween(slotStart + margin, slotStart + slotWidth - margin));
+    let attempts = 0;
+
+    while (attempts < 8 && isCoinNearObstacle(coinX, obstacleLayout)) {
+      coinX = Math.round(randomBetween(slotStart + margin, slotStart + slotWidth - margin));
+      attempts += 1;
+    }
+
+    if (isCoinNearObstacle(coinX, obstacleLayout)) {
+      coinX = Math.round(clamp(slotStart + slotWidth / 2, slotStart + margin, slotStart + slotWidth - margin));
+    }
+
+    positions.push([coinX, coinHeights[Math.floor(Math.random() * coinHeights.length)]]);
+  }
+
+  return positions;
 }
 
 function loadBestScore() {
@@ -174,39 +252,8 @@ function clearLevel() {
 
 function buildLevel() {
   clearLevel();
-
-  const coinPositions = [
-    [360, 60],
-    [430, 95],
-    [520, 120],
-    [760, 60],
-    [880, 138],
-    [980, 138],
-    [1080, 60],
-    [1300, 100],
-    [1380, 140],
-    [1560, 70],
-    [1700, 120],
-    [1840, 70],
-    [2040, 110],
-    [2160, 150],
-    [2340, 90],
-    [2520, 130],
-    [2710, 70],
-    [2890, 120],
-  ];
-
-  const obstacleLayout = [
-    { type: "pipe", x: 620 },
-    { type: "critter", x: 840 },
-    { type: "pipe", x: 1120 },
-    { type: "pipe", x: 1480 },
-    { type: "critter", x: 1660 },
-    { type: "pipe", x: 1960 },
-    { type: "critter", x: 2270 },
-    { type: "pipe", x: 2590 },
-    { type: "critter", x: 2830 },
-  ];
+  const obstacleLayout = generateObstacleLayout();
+  const coinPositions = generateCoinPositions(obstacleLayout);
 
   coinPositions.forEach(function (position) {
     coins.push(createCoin(position[0], position[1]));
