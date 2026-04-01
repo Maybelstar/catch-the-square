@@ -1,4 +1,6 @@
 const scoreDisplay = document.getElementById("score");
+const bestScoreDisplay = document.getElementById("best-score");
+const timerDisplay = document.getElementById("timer");
 const distanceDisplay = document.getElementById("distance");
 const gameArea = document.getElementById("game-area");
 const coinsLayer = document.getElementById("coins-layer");
@@ -23,10 +25,12 @@ const levelLength = 3200;
 const cameraLead = 220;
 
 let score = 0;
+let bestScore = loadBestScore();
 let gameRunning = false;
 let animationFrameId;
 let lastFrameTime = 0;
 let cameraX = 0;
+let elapsedTime = 0;
 
 const controls = {
   left: false,
@@ -43,8 +47,34 @@ const runnerState = {
 let coins = [];
 let obstacles = [];
 
+function loadBestScore() {
+  try {
+    return Number(window.localStorage.getItem("rabbit-run-best-score")) || 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+function saveBestScore() {
+  try {
+    window.localStorage.setItem("rabbit-run-best-score", String(bestScore));
+  } catch (error) {
+    return;
+  }
+}
+
+function syncBestScore() {
+  if (score > bestScore) {
+    bestScore = score;
+    saveBestScore();
+  }
+}
+
 function updateHud() {
+  syncBestScore();
   scoreDisplay.textContent = score;
+  bestScoreDisplay.textContent = bestScore;
+  timerDisplay.textContent = elapsedTime.toFixed(1);
   distanceDisplay.textContent = Math.min(100, Math.round((runnerState.x / (levelLength - runnerWidth)) * 100)) + "%";
 }
 
@@ -252,7 +282,10 @@ function loseGame(text) {
 
 function winGame() {
   stopGameLoop();
-  message.textContent = "Flag reached! Final score: " + score + ".";
+  const speedBonus = Math.max(0, Math.round(900 - elapsedTime * 15));
+  score = score + speedBonus;
+  updateHud();
+  message.textContent = "Flag reached! Speed bonus: " + speedBonus + ". Final score: " + score + ".";
 }
 
 function startGame() {
@@ -260,6 +293,7 @@ function startGame() {
   gameRunning = true;
   lastFrameTime = 0;
   cameraX = 0;
+  elapsedTime = 0;
   controls.left = false;
   controls.right = false;
 
@@ -272,7 +306,7 @@ function startGame() {
   updateHud();
   renderScene();
   runner.classList.remove("jumping");
-  message.textContent = "Use left and right arrows to move. Jump onto pipes or stomp critters.";
+  message.textContent = "Move fast for a bonus, but collect coins on the way.";
   startButton.textContent = "Restart Run";
   cancelAnimationFrame(animationFrameId);
 
@@ -492,12 +526,12 @@ function updateCritterCollisions() {
     if (overlaps(runnerBounds, obstacleBounds)) {
       const horizontalOverlap =
         Math.min(runnerBounds.right, obstacleBounds.right) - Math.max(runnerBounds.left, obstacleBounds.left);
+      const stompWindowTop = obstacleBounds.top + 24;
       const stompedCritter =
         runnerState.velocityY < 0 &&
-        horizontalOverlap >= 12 &&
-        previousBottom >= obstacleBounds.top - 6 &&
-        runnerBounds.bottom >= obstacleBounds.top - 28 &&
-        runnerBounds.bottom <= obstacleBounds.top + 18;
+        horizontalOverlap >= 6 &&
+        previousBottom >= obstacleBounds.top - 4 &&
+        runnerBounds.bottom <= stompWindowTop;
 
       if (stompedCritter) {
         obstacle.defeated = true;
@@ -511,14 +545,24 @@ function updateCritterCollisions() {
         continue;
       }
 
-      loseGame("A roaming critter knocked you out");
-      return;
+      const walkingIntoCritter =
+        runnerState.onGround &&
+        Math.abs(runnerState.velocityY) < 0.01 &&
+        horizontalOverlap >= 14 &&
+        (controls.left || controls.right);
+
+      if (walkingIntoCritter) {
+        loseGame("A roaming critter knocked you out");
+        return;
+      }
     }
   }
 }
 
 function checkWinCondition() {
-  return;
+  if (runnerState.x + runnerWidth >= levelLength + 24) {
+    winGame();
+  }
 }
 
 function gameLoop(timestamp) {
@@ -533,6 +577,7 @@ function gameLoop(timestamp) {
   const deltaTime = timestamp - lastFrameTime;
   const frameScale = Math.min(2.2, deltaTime / 16.67);
   lastFrameTime = timestamp;
+  elapsedTime = elapsedTime + deltaTime / 1000;
 
   updateRunner(frameScale);
   updateCritters(frameScale);
