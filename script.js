@@ -9,6 +9,7 @@ const finishFlag = document.getElementById("finish-flag");
 const runner = document.getElementById("runner");
 const message = document.getElementById("message");
 const startButton = document.getElementById("start-button");
+const controlButtons = Array.from(document.querySelectorAll(".control-button"));
 const sun = document.querySelector(".decor-sun");
 const clouds = Array.from(document.querySelectorAll(".decor-cloud"));
 const hillBack = document.querySelector(".hill-back");
@@ -36,6 +37,16 @@ let elapsedTime = 0;
 const controls = {
   left: false,
   right: false,
+};
+
+const keyboardControls = {
+  left: false,
+  right: false,
+};
+
+const activeTouchControls = {
+  left: new Set(),
+  right: new Set(),
 };
 
 const runnerState = {
@@ -319,8 +330,9 @@ function startGame() {
   lastFrameTime = 0;
   cameraX = 0;
   elapsedTime = 0;
-  controls.left = false;
-  controls.right = false;
+  keyboardControls.left = false;
+  keyboardControls.right = false;
+  resetTouchControls();
 
   runnerState.x = 96;
   runnerState.y = 0;
@@ -628,13 +640,15 @@ function gameLoop(timestamp) {
 function handleKeyDown(event) {
   if (event.code === "ArrowLeft") {
     event.preventDefault();
-    controls.left = true;
+    keyboardControls.left = true;
+    syncDirectionalControls();
     return;
   }
 
   if (event.code === "ArrowRight") {
     event.preventDefault();
-    controls.right = true;
+    keyboardControls.right = true;
+    syncDirectionalControls();
     return;
   }
 
@@ -646,11 +660,13 @@ function handleKeyDown(event) {
 
 function handleKeyUp(event) {
   if (event.code === "ArrowLeft") {
-    controls.left = false;
+    keyboardControls.left = false;
+    syncDirectionalControls();
   }
 
   if (event.code === "ArrowRight") {
-    controls.right = false;
+    keyboardControls.right = false;
+    syncDirectionalControls();
   }
 }
 
@@ -662,10 +678,95 @@ function handlePointerJump(event) {
   jump();
 }
 
+function syncDirectionalControls() {
+  controls.left = keyboardControls.left || activeTouchControls.left.size > 0;
+  controls.right = keyboardControls.right || activeTouchControls.right.size > 0;
+}
+
+function resetTouchControls() {
+  activeTouchControls.left.clear();
+  activeTouchControls.right.clear();
+  controlButtons.forEach(function (button) {
+    button.classList.remove("pressed");
+  });
+  syncDirectionalControls();
+}
+
+function releaseTouchControl(button, pointerId) {
+  const control = button.dataset.control;
+
+  if (control !== "left" && control !== "right") {
+    button.classList.remove("pressed");
+    return;
+  }
+
+  activeTouchControls[control].delete(pointerId);
+  button.classList.remove("pressed");
+  syncDirectionalControls();
+}
+
+function handleControlPress(event) {
+  if (event.cancelable) {
+    event.preventDefault();
+  }
+
+  const button = event.currentTarget;
+  const control = button.dataset.control;
+
+  if (control === "jump") {
+    button.classList.add("pressed");
+    jump();
+    return;
+  }
+
+  if (control !== "left" && control !== "right") {
+    return;
+  }
+
+  activeTouchControls[control].add(event.pointerId);
+  button.classList.add("pressed");
+  syncDirectionalControls();
+
+  if (button.setPointerCapture) {
+    button.setPointerCapture(event.pointerId);
+  }
+}
+
+function handleControlRelease(event) {
+  releaseTouchControl(event.currentTarget, event.pointerId);
+}
+
+function handleJumpButtonRelease(event) {
+  event.currentTarget.classList.remove("pressed");
+}
+
+function handleWindowBlur() {
+  keyboardControls.left = false;
+  keyboardControls.right = false;
+  resetTouchControls();
+}
+
 startButton.addEventListener("click", startGame);
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
+window.addEventListener("blur", handleWindowBlur);
 gameArea.addEventListener("pointerdown", handlePointerJump);
+controlButtons.forEach(function (button) {
+  const control = button.dataset.control;
+
+  button.addEventListener("pointerdown", handleControlPress);
+
+  if (control === "jump") {
+    button.addEventListener("pointerup", handleJumpButtonRelease);
+    button.addEventListener("pointercancel", handleJumpButtonRelease);
+    button.addEventListener("lostpointercapture", handleJumpButtonRelease);
+    return;
+  }
+
+  button.addEventListener("pointerup", handleControlRelease);
+  button.addEventListener("pointercancel", handleControlRelease);
+  button.addEventListener("lostpointercapture", handleControlRelease);
+});
 
 updateHud();
 renderScene();
