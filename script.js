@@ -1,5 +1,5 @@
 const scoreDisplay = document.getElementById("score");
-const bestScoreDisplay = document.getElementById("best-score");
+const highScoreDisplay = document.getElementById("high-score");
 const timerDisplay = document.getElementById("timer");
 const distanceDisplay = document.getElementById("distance");
 const gameArea = document.getElementById("game-area");
@@ -26,6 +26,7 @@ const cameraLead = 220;
 
 let score = 0;
 let bestScore = loadBestScore();
+let bestPlayerName = loadBestPlayerName();
 let gameRunning = false;
 let animationFrameId;
 let lastFrameTime = 0;
@@ -49,31 +50,51 @@ let obstacles = [];
 
 function loadBestScore() {
   try {
-    return Number(window.localStorage.getItem("rabbit-run-best-score")) || 0;
+    return Number(window.localStorage.getItem("rabbit-run-best-score-v2")) || 0;
   } catch (error) {
     return 0;
   }
 }
 
+function loadBestPlayerName() {
+  try {
+    return window.localStorage.getItem("rabbit-run-best-player-v2") || "Nobody yet";
+  } catch (error) {
+    return "Nobody yet";
+  }
+}
+
 function saveBestScore() {
   try {
-    window.localStorage.setItem("rabbit-run-best-score", String(bestScore));
+    window.localStorage.setItem("rabbit-run-best-score-v2", String(bestScore));
+    window.localStorage.setItem("rabbit-run-best-player-v2", bestPlayerName);
   } catch (error) {
     return;
   }
 }
 
-function syncBestScore() {
-  if (score > bestScore) {
-    bestScore = score;
-    saveBestScore();
+function updateBestScoreDisplay() {
+  highScoreDisplay.textContent = "High score: " + bestScore + " by " + bestPlayerName;
+}
+
+function maybeRecordBestScore() {
+  if (score <= bestScore) {
+    return false;
   }
+
+  const enteredName = window.prompt("New high score! What is the player's name?", bestPlayerName === "Nobody yet" ? "" : bestPlayerName);
+  const cleanedName = enteredName && enteredName.trim() ? enteredName.trim() : "Anonymous Rabbit";
+
+  bestScore = score;
+  bestPlayerName = cleanedName;
+  saveBestScore();
+  updateBestScoreDisplay();
+  return true;
 }
 
 function updateHud() {
-  syncBestScore();
   scoreDisplay.textContent = score;
-  bestScoreDisplay.textContent = bestScore;
+  updateBestScoreDisplay();
   timerDisplay.textContent = elapsedTime.toFixed(1);
   distanceDisplay.textContent = Math.min(100, Math.round((runnerState.x / (levelLength - runnerWidth)) * 100)) + "%";
 }
@@ -277,15 +298,19 @@ function stopGameLoop() {
 
 function loseGame(text) {
   stopGameLoop();
-  message.textContent = text + " Score: " + score + ".";
+  const isNewBest = maybeRecordBestScore();
+  message.textContent = text + " Score: " + score + "." + (isNewBest ? " New record!" : "");
+  updateHud();
 }
 
 function winGame() {
   stopGameLoop();
   const speedBonus = Math.max(0, Math.round(900 - elapsedTime * 15));
   score = score + speedBonus;
+  const isNewBest = maybeRecordBestScore();
   updateHud();
-  message.textContent = "Flag reached! Speed bonus: " + speedBonus + ". Final score: " + score + ".";
+  message.textContent =
+    "Flag reached! Speed bonus: " + speedBonus + ". Final score: " + score + "." + (isNewBest ? " New record!" : "");
 }
 
 function startGame() {
